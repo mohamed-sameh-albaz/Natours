@@ -1,0 +1,29 @@
+{
+  "name": "natrous",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohamed-sameh-albaz/Natrous.git"
+  },
+  "keywords": [],
+  "author": "Mohamed Albaz",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/mohamed-sameh-albaz/Natrous/issues"
+  },
+  "homepage": "https://github.com/mohamed-sameh-albaz/Natrous#readme",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "morgan": "^1.10.0",
+    "nodemon": "^3.1.9"
+  }
+}
