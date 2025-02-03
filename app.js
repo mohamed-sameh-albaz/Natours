@@ -1,20 +1,21 @@
-import express from "express";
-import morgan from "morgan";
+const express = require('express');
+const morgan = require('morgan');
 
-import tourRouter from './routes/tourRoutes'
-import userRouter from './routes/userRoutes.js'
+const tourRouter = require('./routes/tourRoutes');
+
 const app = express();
+app.use(express.json());
 
 // Middlewares
-if(process.env.NODE_ENV==='development'){
+if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
 app.use(express.json());
-app.use(express.static(`${__dirname}/public`))
+// app.use(express.static(`${__dirname}/public`))
 
 // Routes
 app.use('/api/v1/tours', tourRouter);
-app.use('/api/v1/users', userRouter);
+// app.use('/api/v1/users', userRouter);
 
-export default app;
+module.exports = app;

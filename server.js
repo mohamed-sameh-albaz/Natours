@@ -1,7 +1,14 @@
-import dotenv from 'dotenv';
-import app from './app';
+const dotenv = require('dotenv');
+const app = require('./app.js');
+const mongoose = require('mongoose');
 
 dotenv.config({ path: './config.env' });
+const DB = process.env.DATABASE.replace(
+  '<PASSWORD>',
+  process.env.DATABASE_PASSWORD
+);
+
+mongoose.connect(DB).then(() => console.log('DB connection successful'));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

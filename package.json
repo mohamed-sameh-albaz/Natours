@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js"
+    "start": "nodemon server.js",
+    "debug": "ndb server.js"
   },
   "repository": {
     "type": "git",
@@ -13,14 +14,17 @@
   "keywords": [],
   "author": "Mohamed Albaz",
   "license": "ISC",
-  "type": "module",
+  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/mohamed-sameh-albaz/Natrous/issues"
   },
   "homepage": "https://github.com/mohamed-sameh-albaz/Natrous#readme",
   "dependencies": {
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "mongodb": "^6.13.0",
+    "mongoose": "^8.9.6",
+    "ndb": "^1.1.5"
   },
   "devDependencies": {
     "morgan": "^1.10.0",
