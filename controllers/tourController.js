@@ -4,7 +4,7 @@ const ApiFeatures = require('./../utils/apiFeatures');
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
   req.query.sort = '-ratingAverage,price';
-  req.query.fields = 'name, price,ratingAverage,description,difficulty';
+  req.query.fields = 'name,price,ratingAverages,description,difficulty';
   next();
 };
 
@@ -30,7 +30,6 @@ exports.getAllTours = async (req, res) => {
       .sort()
       .limitFields()
       .paginate();
-      console.log(features)
     const tours = await features.query;
     res.status(200).json({
       status: 'success',
@@ -106,14 +105,14 @@ exports.getTourStats = async (req, res) => {
   try {
     const stats = await Tour.aggregate([
       {
-        $match: { ratingAverage: { $gte: 4.5 } },
+        $match: { ratingAverages: { $gte: 4.5 } },
       },
       {
         $group: {
-          _id: '$difficulty',
+          _id: { $toUpper: '$difficulty' },
           numTours: { $sum: 1 },
           numRatings: { $sum: '$ratingsQuantity' },
-          avgRating: { $avg: '$ratingsAverage' },
+          avgRating: { $avg: '$ratingAverages' },
           avgPrice: { $avg: '$price' },
           minPrice: { $min: '$price' },
           maxPrice: { $max: '$price' },
@@ -154,20 +153,29 @@ exports.getMonthlyPlan = async (req, res) => {
       },
       {
         $group: {
-          _id: { $month: 'startDates' },
+          _id: { $month: '$startDates' },
           numTourStarts: { $sum: 1 },
           tours: { $push: '$name' },
         },
       },
       {
-        $project: { _id: 0 },
+        $project: {
+          _id: 0, // execlude id of each tour
+          month: '$_id', // include the month field with _id
+          numTourStarts: 1, // include numTourStarts
+          tours: 1,
+        },
       },
       {
-        $sort: { numTourStarts: -1 },
+        $sort: {
+          month: 1,
+          numTourStarts: -1,
+        },
       },
     ]);
     res.status(200).json({
       status: 'success',
+      results: plan.length,
       data: {
         plan,
       },
