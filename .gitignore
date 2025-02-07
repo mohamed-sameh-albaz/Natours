@@ -130,5 +130,4 @@ dist
 .pnp.*
 
 # front
-dev-data/
 public/
