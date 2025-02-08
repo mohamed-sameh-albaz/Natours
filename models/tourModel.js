@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -65,11 +66,42 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a cover image'],
     },
     startDates: [Date],
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true, // Enable automatic createdAt and updatedAt fields
+  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+tourSchema.virtual('durationWeeks').get(function () {
+  return this.duration / 7;
+});
+
+// DOCUMENT MIDDLEWARES: runs before .create() and .save()
+tourSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+// QUERY MIDDLEWARE
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  next();
+});
+
+// AGGREGATION MIDDLEWARE
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  console.log(this.pipeline());
+  next();
+});
 
 const Tour = mongoose.models.Tour || mongoose.model('Tour', tourSchema);
 module.exports = Tour;
