@@ -35,14 +35,16 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getTourById = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id).select('-__v');
+  // populate for the referenced data of users so looks as it is embeddeed
+  const tour = await Tour.findById(req.params.id).populate('reviews');
   if (!tour) {
     return next(new AppError('No tour found with that ID', 404));
   }
   res.status(200).json({
     status: 'success',
     data: {
-      tour,
+      ...tour._doc,
+      ...tour.$$populatedVirtuals, // send the virtual populated data in the response;
     },
   });
 });
