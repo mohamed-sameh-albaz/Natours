@@ -20,10 +20,11 @@ const createSendToken = (user, statusCode, res) => {
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
     // secure: true, // cookies will send only when using secure conncection HTTPS
+    // sameSite: 'none', // Add this line for local development
     httpOnly: true, // cookies can not be accessed or modified any way by the browser
   };
   if (process.env.NODE_ENV === 'production') cookiesOptions.secure = true;
-  res.cookie('jwt', cookiesOptions);
+  res.cookie('jwt', token, cookiesOptions);
   user.password = undefined;
   res.status(statusCode).json({
     status: 'success',
@@ -61,6 +62,16 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+exports.logout = catchAsync(async (req, res, next) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({
+    status: 'success',
+  });
+});
+
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) get the token and check if it's there
   let token;
@@ -69,7 +80,10 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
+  console.log(req.cookie);
   if (!token) {
     next(
       new AppError('You are not logged in! please log in to get access.', 401)
@@ -97,8 +111,42 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // Grant access to protected routes
   req.user = user;
+  res.locals.user = user;
   next();
 });
+
+// grant acess to protected routes
+exports.isLoggedIn = async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      // 1) verification the token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      // 2) check if the user still exists if the user not deleted
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        return next;
+      }
+
+      // 3) check if the user changed his password after the token was issued
+      if (user.changePasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      // There is a logged in user
+      res.locals.user = user;
+      // console.log('locals', res.locals);
+
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
+  next();
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
