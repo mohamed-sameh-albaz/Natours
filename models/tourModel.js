@@ -35,7 +35,7 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'Rating must be above 1.0'],
       max: [5, 'Rating must be below 5.0'],
-      set: val => Math.round(val * 10) / 10,
+      set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {
       type: Number,
@@ -68,6 +68,7 @@ const tourSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A tour must have a cover image'],
     },
+    images: [String],
     startDates: [Date],
     secretTour: {
       type: Boolean,
@@ -78,30 +79,31 @@ const tourSchema = new mongoose.Schema(
       type: {
         type: String,
         default: 'Point',
-        enum: ['Point']
+        enum: ['Point'],
       },
       coordinates: [Number],
       address: String,
-      description: String
+      description: String,
     },
     locations: [
       {
         type: {
           type: String,
           default: 'Point',
-          enum: ['Point']
+          enum: ['Point'],
         },
         coordinates: [Number],
         address: String,
         description: String,
-        day: Number
-      }
+        day: Number,
+      },
     ],
-    guides: [ // child referencing 
+    guides: [
+      // child referencing
       {
         type: mongoose.Schema.ObjectId,
-        ref: 'User'
-      }
+        ref: 'User',
+      },
     ],
     // reviews: [
     //   {
@@ -120,8 +122,9 @@ const tourSchema = new mongoose.Schema(
 );
 
 // tourSchema.index({ price: 1 })
-tourSchema.index({ price: 1, ratingAverages: -1})
-tourSchema.index({ slug: 1 })
+tourSchema.index({ price: 1, ratingAverages: -1 });
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
 
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
@@ -131,7 +134,7 @@ tourSchema.virtual('durationWeeks').get(function () {
 tourSchema.virtual('reviews', {
   ref: 'Review',
   foreignField: 'tour',
-  localField: '_id'
+  localField: '_id',
 });
 
 // DOCUMENT MIDDLEWARES: runs before .create() and .save()
@@ -140,13 +143,13 @@ tourSchema.pre('save', function (next) {
   next();
 });
 
-tourSchema.pre(/^find/, function(next) {
+tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
-    select: '-__v -passwordChangedAt'
+    select: '-__v -passwordChangedAt',
   });
   next();
-})
+});
 
 // embedding tour guides in tour document
 // tourSchema.pre('save', async function(next) {
@@ -162,11 +165,11 @@ tourSchema.pre(/^find/, function (next) {
 });
 
 // AGGREGATION MIDDLEWARE
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  console.log(this.pipeline());
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   console.log(this.pipeline());
+//   next();
+// });
 
 const Tour = mongoose.models.Tour || mongoose.model('Tour', tourSchema);
 module.exports = Tour;
