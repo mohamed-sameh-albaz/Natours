@@ -16,7 +16,7 @@ exports.getAllUsers = factory.getAll(User);
 exports.getMe = (req, res, next) => {
   req.params.id = req.user.id;
   next();
-}
+};
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) create error if user posts password data
@@ -31,7 +31,10 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
   // 2) filter out unwanted fields name, email and photo are only allowed to update
   const filteredBody = filterObj(req.body, 'name', 'email');
-
+  if (req.user.email === req.body.email && req.user.name === req.body.name) {
+    console.log('No thing to update');
+    return;
+  }
   // 3) update user document
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
@@ -56,7 +59,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 exports.createUser = catchAsync(async (req, res, next) => {
   res.status(500).json({
     status: 'error',
-    message: 'This route is not correct please use /signup instead'
+    message: 'This route is not correct please use /signup instead',
   });
 });
 
