@@ -13,7 +13,6 @@ const DB = process.env.DATABASE.replace(
 );
 console.log('Connection string:', DB);
 
-// Enable Mongoose debugging
 mongoose.set('debug', true);
 
 const connectDB = async () => {
@@ -21,6 +20,8 @@ const connectDB = async () => {
     const conn = await mongoose.connect(DB, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 50000,
+      maxPoolSize: 10,
     });
     console.log('DB connected successfully:', conn.connection.name);
     return conn;
@@ -38,40 +39,50 @@ const users = JSON.parse(usersData);
 const reviews = JSON.parse(reviewsData);
 
 const importData = async () => {
+  let conn;
   try {
-    await connectDB();
+    conn = await connectDB();
     console.log('Starting import...');
+
+    console.log('Importing tours...');
     await Tour.create(tours, { validateBeforeSave: false });
+    console.log('Tours imported:', tours.length);
+
+    console.log('Importing users...');
     await User.create(users, { validateBeforeSave: false });
+    console.log('Users imported:', users.length);
+
+    console.log('Importing reviews...');
     await Review.create(reviews, { validateBeforeSave: false });
-    console.log('Data created successfully:', tours.length, 'tours');
-    console.log('Data created successfully:', users.length, 'users');
-    console.log('Data created successfully:', reviews.length, 'reviews');
+    console.log('Reviews imported:', reviews.length);
+
+    console.log('Data import completed successfully');
   } catch (err) {
     console.error('Import error:', err);
+    process.exit(1);
   } finally {
-    await mongoose.connection.close();
-    console.log('Connection closed');
+    if (conn) {
+      await mongoose.connection.close();
+      console.log('Connection closed');
+    }
     process.exit(0);
   }
 };
 
 const deleteData = async () => {
+  let conn;
   try {
-    await connectDB();
+    conn = await connectDB();
     console.log('Starting delete...');
-    // Verify collection exists
     const collections = await mongoose.connection.db
       .listCollections()
       .toArray();
     const collectionExists = collections.some((c) => c.name === 'tours');
     console.log('Tours collection exists:', collectionExists);
 
-    // Test a simple query first
     const count = await Tour.countDocuments();
     console.log('Documents in tours collection:', count);
 
-    // Perform delete
     let result = await Tour.deleteMany();
     console.log('Data deleted successfully:', result.deletedCount, 'tours');
     result = await User.deleteMany();
@@ -80,9 +91,12 @@ const deleteData = async () => {
     console.log('Data deleted successfully:', result.deletedCount, 'Reviews');
   } catch (err) {
     console.error('Delete error:', err);
+    process.exit(1);
   } finally {
-    await mongoose.connection.close();
-    console.log('Connection closed');
+    if (conn) {
+      await mongoose.connection.close();
+      console.log('Connection closed');
+    }
     process.exit(0);
   }
 };
