@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   photo: {
     type: String,
+    default: 'default.jpg',
   },
   role: {
     type: String,
@@ -68,6 +69,7 @@ userSchema.pre(/^find/, function (next) {
   this.find({ active: { $ne: false } });
   next();
 });
+
 userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword

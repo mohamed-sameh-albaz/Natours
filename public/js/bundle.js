@@ -12944,13 +12944,12 @@ if (logoutBtn) {
 }
 if (updateDataForm) {
   updateDataForm.addEventListener('submit', function (e) {
-    var name = document.getElementById('name').value;
-    var email = document.getElementById('email').value;
     e.preventDefault();
-    (0, _updateSettings.updateSettings)({
-      name: name,
-      email: email
-    }, 'data');
+    var form = new FormData();
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]);
+    (0, _updateSettings.updateSettings)(form, 'data');
   });
 }
 if (updatePasswordForm) {
@@ -12960,11 +12959,11 @@ if (updatePasswordForm) {
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
+            e.preventDefault();
             currentPassword = document.getElementById('password-current').value;
             password = document.getElementById('password').value;
             confirmPassword = document.getElementById('password-confirm').value;
             updatePasswordBtn.textContent = 'Updating....';
-            e.preventDefault();
             _context.next = 7;
             return (0, _updateSettings.updateSettings)({
               currentPassword: currentPassword,
@@ -13012,7 +13011,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "39873" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "44775" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
@@ -13157,4 +13156,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
-//# sourceMappingURL=/bundle.js.map
+//# sourceMappingURL=/js/bundle.js.map
