@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('../utils/appError');
-const sendEmail = require('../utils/email');
+const Email = require('../utils/email');
 const crypto = require('crypto');
 
 const signToken = (id) => {
@@ -19,12 +19,13 @@ const createSendToken = (user, statusCode, res) => {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
-    // secure: true, // cookies will send only when using secure conncection HTTPS
-    // sameSite: 'none', // Add this line for local development
-    httpOnly: true, // cookies can not be accessed or modified any way by the browser
+    httpOnly: true, // cookies can not be accessed or modified any way by the browser Prevent client-side JavaScript access
+    // partitioned: true, // Required for CHIPS compliance in cross-site contexts
+    secure: process.env.NODE_ENV === 'production', // Secure in production, false for local dev
   };
-  if (process.env.NODE_ENV === 'production') cookiesOptions.secure = true;
+  console.log(cookiesOptions);
   res.cookie('jwt', token, cookiesOptions);
+  // Remove password from response
   user.password = undefined;
   res.status(statusCode).json({
     status: 'success',
@@ -42,6 +43,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     confirmPassword,
     role,
   });
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  new Email(newUser, url).sendWelcome();
   createSendToken(newUser, 201, res);
 });
 
@@ -74,17 +77,20 @@ exports.logout = catchAsync(async (req, res, next) => {
 
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) get the token and check if it's there
-  let token;
+  let token = null;
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
-  } else if (req.cookies.jwt) {
+    if (token === 'null') {
+      token = null;
+    }
+  }
+  if (!token && req.cookies.jwt) {
     token = req.cookies.jwt;
   }
-  console.log(req.cookie);
-  if (!token) {
+  if (!token || token === 'null') {
     next(
       new AppError('You are not logged in! please log in to get access.', 401)
     );
@@ -128,7 +134,7 @@ exports.isLoggedIn = async (req, res, next) => {
       // 2) check if the user still exists if the user not deleted
       const user = await User.findById(decoded.id);
       if (!user) {
-        return next;
+        return next();
       }
 
       // 3) check if the user changed his password after the token was issued
@@ -138,7 +144,6 @@ exports.isLoggedIn = async (req, res, next) => {
 
       // There is a logged in user
       res.locals.user = user;
-      // console.log('locals', res.locals);
 
       return next();
     } catch (err) {
@@ -171,16 +176,11 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // 3) send the token to the user's email
-  const resetUrl = `${req.protocol}://${req.get(
-    'host'
-  )}/api/v1/users/resetPassword/${resetToken}`;
-  const message = `Forgot your password? Submit a patch request with your new password to ${resetUrl}.\nIf you didn't forgot your password please ignore this email!`;
   try {
-    await sendEmail({
-      email: user.email,
-      subject: 'Your password reset token (valid for only 10 min)',
-      message,
-    });
+    const resetUrl = `${req.protocol}://${req.get(
+      'host'
+    )}/api/v1/users/resetPassword/${resetToken}`;
+    await new Email(user, resetUrl).sendPasswordReset();
     res.status(200).json({
       status: 'success',
       message: 'Token sent to email',
