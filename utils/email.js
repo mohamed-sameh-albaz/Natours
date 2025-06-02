@@ -21,12 +21,6 @@ module.exports = class Email {
         },
       });
     }
-    console.log('Transport config:', {
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    });
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
@@ -57,7 +51,6 @@ module.exports = class Email {
       html,
     };
 
-    console.log('sendFunction', mailOptions);
     // 3) create a transport and send the email
     await this.newTransporter().sendMail(mailOptions);
   }

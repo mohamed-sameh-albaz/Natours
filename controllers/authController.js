@@ -23,7 +23,7 @@ const createSendToken = (user, statusCode, res) => {
     // partitioned: true, // Required for CHIPS compliance in cross-site contexts
     secure: process.env.NODE_ENV === 'production', // Secure in production, false for local dev
   };
-  console.log(cookiesOptions);
+  // console.log(cookiesOptions);
   res.cookie('jwt', token, cookiesOptions);
   // Remove password from response
   user.password = undefined;
@@ -97,7 +97,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   // 2) verification the token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  console.log(decoded);
+  // console.log(decoded);
   // 3) check if the user still exists if the user not deleted
   const user = await User.findById(decoded.id);
   if (!user) {

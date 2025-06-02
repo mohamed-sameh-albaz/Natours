@@ -22,10 +22,8 @@ const bookTourBtn = document.getElementById('book-tour');
 if (loginForm) {
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    console.log(22);
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    console.log(email, password);
     login(email, password);
   });
 }
@@ -65,7 +63,6 @@ if (updatePasswordForm) {
 
 if (bookTourBtn) {
   bookTourBtn.addEventListener('click', (e) => {
-    console.log(33);
     e.target.textContent = 'Processing...';
     const { tourId } = e.target.dataset;
     bookTour(tourId);

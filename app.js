@@ -9,6 +9,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const compression = require('compression');
 
 dotenv.config({ path: './config.env' });
 
@@ -137,6 +138,8 @@ app.use(
 //   );
 //   next();
 // });
+
+app.use(compression()) // compress all text before sending to the client
 
 // Routes
 app.use('/', viewRouter);
